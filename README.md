@@ -27,3 +27,8 @@ Kontroler obsługuje wymagane żądania wykrzystując do tego celu klasy usługo
 Powyższe klasy wykorzystują obiekt DAO DataAccessServicePostgres implementujący połączenie z bazą danych.
 Obsługuje on wymianę danych z aplikacji do bazy danych i na odwrót
 
+#Ścieżka do pliku .csv
+Ścieżka znajduje się w pliku config.properties mieszczący się w /src/main/resources
+
+
+
