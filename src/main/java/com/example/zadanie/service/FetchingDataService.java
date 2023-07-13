@@ -8,6 +8,7 @@ import com.example.zadanie.models.OneDayData;
 import com.opencsv.bean.CsvToBeanBuilder;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.mail.SimpleMailMessage;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -44,6 +45,7 @@ public class FetchingDataService {
         return dataAccessService.getNewestDataByCustomer(customerId, date);
     }
 
+    @Scheduled(cron = "${interval-in-cron}")
     public void fetchNewData() throws IOException {
         List<NewDataDTO> newData = new CsvToBeanBuilder<NewDataDTO>(new FileReader(dataPath))
                 .withType(NewDataDTO.class)
