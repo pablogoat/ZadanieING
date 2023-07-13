@@ -1,11 +1,11 @@
 package com.example.zadanie.service;
 
+import com.example.zadanie.dao.DAO;
 import com.example.zadanie.dto.NoteDTO;
 import com.example.zadanie.dto.ResponseNoteDTO;
 import com.example.zadanie.models.Customer;
 import com.example.zadanie.models.Note;
-import com.example.zadanie.repository.OneDayDataRepository;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -13,12 +13,15 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 public class NotesService {
-    private final OneDayDataRepository oneDayDataRepository;
+    private final DAO dataAccessService;
+
+    public NotesService(@Qualifier("postgres") DAO dataAccessService){
+        this.dataAccessService = dataAccessService;
+    }
 
     public String addNote(String customerId, NoteDTO note){
-        Optional<Customer> customer = oneDayDataRepository.getCustomer(customerId);
+        Optional<Customer> customer = dataAccessService.getCustomer(customerId);
 
         if (customer.isEmpty()){
             return "Customer does not exist";
@@ -31,12 +34,12 @@ public class NotesService {
                 .title(note.getTitle())
                 .content(note.getContent())
                 .build();
-        oneDayDataRepository.saveNote(newNote);
+        dataAccessService.saveNote(newNote);
 
         return "Note added successfully";
     }
 
     public List<ResponseNoteDTO> getNotes(String customerId, LocalDate since, LocalDate until) {
-        return oneDayDataRepository.getNotes(customerId, since, until);
+        return dataAccessService.getNotes(customerId, since, until);
     }
 }

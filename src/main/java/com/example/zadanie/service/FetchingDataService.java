@@ -1,11 +1,12 @@
 package com.example.zadanie.service;
 
+import com.example.zadanie.dao.DAO;
 import com.example.zadanie.dto.NewDataDTO;
 import com.example.zadanie.dto.ResponseData;
 import com.example.zadanie.models.Customer;
 import com.example.zadanie.models.OneDayData;
-import com.example.zadanie.repository.OneDayDataRepository;
 import com.opencsv.bean.CsvToBeanBuilder;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Service;
 
@@ -20,11 +21,11 @@ import java.util.*;
 @Service
 public class FetchingDataService {
     private final String dataPath;
-    private final OneDayDataRepository oneDayDataRepository;
+    private final DAO dataAccessService;
     private final EmailGenerateService emailGenerateService;
 
-    public FetchingDataService(OneDayDataRepository oneDayDataRepository, EmailGenerateService emailGenerateService) {
-        this.oneDayDataRepository = oneDayDataRepository;
+    public FetchingDataService(@Qualifier("postgres") DAO dataAccessService, EmailGenerateService emailGenerateService) {
+        this.dataAccessService = dataAccessService;
         this.emailGenerateService = emailGenerateService;
 
         Properties properties = new Properties();
@@ -40,7 +41,7 @@ public class FetchingDataService {
     }
 
     public Optional<ResponseData> getNewestDataByCustomer(String customerId, Optional<LocalDate> date){
-        return oneDayDataRepository.getNewestDataByCustomer(customerId, date);
+        return dataAccessService.getNewestDataByCustomer(customerId, date);
     }
 
     public void fetchNewData() throws IOException {
@@ -50,7 +51,7 @@ public class FetchingDataService {
                 .parse();
 
         for(NewDataDTO data : newData){
-            Optional<Customer> customer = oneDayDataRepository.getCustomer(data.getCustomerId());
+            Optional<Customer> customer = dataAccessService.getCustomer(data.getCustomerId());
 
             if (customer.isEmpty()) {
                 var customerToSave = Customer.builder()
@@ -62,7 +63,7 @@ public class FetchingDataService {
                         .build();
 
                 customer = Optional.of(customerToSave);
-                oneDayDataRepository.saveCustomer(customerToSave);
+                dataAccessService.saveCustomer(customerToSave);
             }
 
             var dataToSave = OneDayData.builder()
@@ -74,7 +75,7 @@ public class FetchingDataService {
                     .R2(calculateR2(data))
                     .build();
 
-            oneDayDataRepository.saveOneDayData(dataToSave);
+            dataAccessService.saveOneDayData(dataToSave);
         }
 
     }
@@ -172,7 +173,7 @@ public class FetchingDataService {
     }
 
     public List<OneDayData> getCustomerData(String customerId, int rows){
-        return oneDayDataRepository.getCustomerData(customerId, rows);
+        return dataAccessService.getCustomerData(customerId, rows);
     }
 
 }

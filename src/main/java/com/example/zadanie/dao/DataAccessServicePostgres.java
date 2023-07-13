@@ -1,4 +1,4 @@
-package com.example.zadanie.repository;
+package com.example.zadanie.dao;
 
 import com.example.zadanie.dto.ResponseData;
 import com.example.zadanie.dto.ResponseNoteDTO;
@@ -17,11 +17,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Repository
+@Repository("postgres")
 @AllArgsConstructor
-public class OneDayDataRepository {
+public class DataAccessServicePostgres implements DAO {
     private final SessionFactory sessionFactory;
 
+    @Override
     public void saveOneDayData(OneDayData data){
         try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
@@ -32,6 +33,7 @@ public class OneDayDataRepository {
         }
     }
 
+    @Override
     public void saveCustomer(Customer customer){
         try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
@@ -42,6 +44,7 @@ public class OneDayDataRepository {
         }
     }
 
+    @Override
     public void saveNote(Note note) {
         try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
@@ -52,6 +55,7 @@ public class OneDayDataRepository {
         }
     }
 
+    @Override
     public Optional<Customer> getCustomer(String customerId){
         try (Session session = sessionFactory.openSession()) {
 
@@ -74,6 +78,7 @@ public class OneDayDataRepository {
         }
     }
 
+    @Override
     public List<OneDayData> getCustomerData(String customerId, int rows){
         List<OneDayData> results;
 
@@ -97,6 +102,7 @@ public class OneDayDataRepository {
         return results;
     }
 
+    @Override
     public Optional<ResponseData> getNewestDataByCustomer(String customerId, Optional<LocalDate> date){
 
         String hql;
@@ -136,6 +142,7 @@ public class OneDayDataRepository {
         }
     }
 
+    @Override
     public List<ResponseNoteDTO> getNotes(String customerId, LocalDate since, LocalDate until) {
         List<ResponseNoteDTO> results;
 
