@@ -19,7 +19,6 @@ public class Client {
     @Id
     private String id;
     private String customerName;
-    @Temporal(TemporalType.DATE)
     private Date startDate;
     private String customerType;
     private BigDecimal customerIncome;

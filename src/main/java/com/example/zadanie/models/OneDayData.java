@@ -1,5 +1,6 @@
 package com.example.zadanie.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.opencsv.bean.CsvBindByName;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -21,14 +22,13 @@ public class OneDayData {
     @Id
     @GeneratedValue
     private Integer id;
-    @Temporal(TemporalType.DATE)
     private LocalDate date;
     /*@ManyToOne
     @JoinColumn(name = "CLIENT_ID", referencedColumnName = "ID", nullable = false)
+    @JsonIgnore
     private Client client;*/
     private String customerId;
     private String customerName;
-    @Temporal(TemporalType.DATE)
     private LocalDate startDate;
     private String customerType;
     private BigDecimal customerIncome;

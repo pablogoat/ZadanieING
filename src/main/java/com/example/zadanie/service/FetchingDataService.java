@@ -4,6 +4,7 @@ import com.example.zadanie.dao.NewDataDAO;
 import com.example.zadanie.models.OneDayData;
 import com.example.zadanie.repository.OneDayDataRepository;
 import com.opencsv.bean.CsvToBeanBuilder;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -13,15 +14,17 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class FetchingDataService {
     private final String dataPath;
     private final OneDayDataRepository oneDayDataRepository;
+    private final EmailGenerateService emailGenerateService;
 
-    public FetchingDataService(OneDayDataRepository oneDayDataRepository) {
+    public FetchingDataService(OneDayDataRepository oneDayDataRepository, EmailGenerateService emailGenerateService) {
         this.oneDayDataRepository = oneDayDataRepository;
+        this.emailGenerateService = emailGenerateService;
+
         Properties properties = new Properties();
         try {
             String path = new File("src/main/resources/config.properties").getAbsolutePath();
@@ -88,9 +91,10 @@ public class FetchingDataService {
                 newData.getCustomerRiskClass().equals("A3")){
             String customerBusinessTypeType = newData.getCustomerBusinessType();
 
-            switch (customerBusinessTypeType) {
-                case "BR_3" -> R1 *= 0.1;
-                default -> R1 *= 0.2;
+            if (customerBusinessTypeType.equals("BR_3")) {
+                R1 *= 0.1;
+            } else {
+                R1 *= 0.2;
             }
         }
 
@@ -114,6 +118,40 @@ public class FetchingDataService {
         }
 
         return R2;
+    }
+
+    private void potentialEmailSend(NewDataDAO newData) {
+        List<OneDayData> latestData = getCustomerData(newData.getCustomerId(), 1);
+
+        if(!latestData.isEmpty()) {
+            String latestCustomerRiskClass = latestData.get(0).getCustomerRiskClass();
+
+            if(!latestCustomerRiskClass.equals(newData.getCustomerRiskClass())){
+                SimpleMailMessage message;
+
+                if(
+                        newData.getCustomerType().equals("TYPE_A2")
+                        &&
+                        newData.getCustomerBusinessType().equals("BR_2")
+                ){
+                    message = emailGenerateService.generateMail(
+                            List.of("koordynatorkoordynatorow@fikcyjnafirma.com"),
+                            String.format("Proszę o przegląd ryzyka klienta %s", newData.getCustomerId()));
+                    //wyslanie wiadomosci
+                } else if (
+                        newData.getCustomerType().equals("TYPE_A1")
+                        ||
+                        newData.getCustomerType().equals("TYPE_A5")
+                ) {
+                    message = emailGenerateService.generateMail(
+                            List.of("koordynatorkoordynatorow@fikcyjnafirma.com",
+                            "dyrektorjednostki@fikcyjnafirma.com"),
+                            String.format("Uprzejmie informuję, że zmieniła się klasa ryzyka dlaklienta %s",
+                                    newData.getCustomerId()));
+                    //wyslanie wiadomosci
+                }
+            }
+        }
     }
 
     public List<OneDayData> getCustomerData(String customerId, int rows){
