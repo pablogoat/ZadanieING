@@ -3,7 +3,6 @@ package com.example.zadanie.api;
 import com.example.zadanie.dto.NoteDTO;
 import com.example.zadanie.dto.ResponseData;
 import com.example.zadanie.dto.ResponseNoteDTO;
-import com.example.zadanie.models.OneDayData;
 import com.example.zadanie.service.FetchingDataService;
 import com.example.zadanie.service.NotesService;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +18,7 @@ import java.util.Optional;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api")
-public class TestController {
+public class DataNotesController {
 
     private final FetchingDataService fetchingDataService;
     private final NotesService notesService;
