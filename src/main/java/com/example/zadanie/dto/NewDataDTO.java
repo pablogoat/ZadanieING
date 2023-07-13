@@ -1,35 +1,34 @@
-package com.example.zadanie.dao;
+package com.example.zadanie.dto;
 
 import com.opencsv.bean.CsvBindByName;
-import com.opencsv.bean.CsvBindByPosition;
 import lombok.Data;
 
 @Data
-public class NewDataDAO {
+public class NewDataDTO {
 
     @CsvBindByName(column = "info_as_of_date")
-    private String date;
+    protected String date;
 
     @CsvBindByName(column = "customer_id")
-    private String customerId;
+    protected String customerId;
 
     @CsvBindByName(column = "customer_name")
-    private String customerName;
+    protected String customerName;
 
     @CsvBindByName(column = "customer_start_date")
-    private String startDate;
+    protected String startDate;
 
     @CsvBindByName(column = "customer_type")
-    private String customerType;
+    protected String customerType;
 
     @CsvBindByName(column = "customer_income")
-    private String customerIncome;
+    protected String customerIncome;
 
     @CsvBindByName(column = "customer_risk_class")
-    private String customerRiskClass;
+    protected String customerRiskClass;
 
     @CsvBindByName(column = "customer_business_type")
-    private String customerBusinessType;
+    protected String customerBusinessType;
 
 
 }

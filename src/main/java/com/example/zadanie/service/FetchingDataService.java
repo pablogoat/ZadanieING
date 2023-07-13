@@ -1,6 +1,8 @@
 package com.example.zadanie.service;
 
-import com.example.zadanie.dao.NewDataDAO;
+import com.example.zadanie.dto.NewDataDTO;
+import com.example.zadanie.dto.ResponseData;
+import com.example.zadanie.models.Customer;
 import com.example.zadanie.models.OneDayData;
 import com.example.zadanie.repository.OneDayDataRepository;
 import com.opencsv.bean.CsvToBeanBuilder;
@@ -37,32 +39,49 @@ public class FetchingDataService {
         }
     }
 
+    public Optional<ResponseData> getNewestDataByCustomer(String customerId, Optional<LocalDate> date){
+        return oneDayDataRepository.getNewestDataByCustomer(customerId, date);
+    }
+
     public void fetchNewData() throws IOException {
-        List<NewDataDAO> newData = new CsvToBeanBuilder<NewDataDAO>(new FileReader(dataPath))
-                .withType(NewDataDAO.class)
+        List<NewDataDTO> newData = new CsvToBeanBuilder<NewDataDTO>(new FileReader(dataPath))
+                .withType(NewDataDTO.class)
                 .build()
                 .parse();
 
-        for(NewDataDAO data : newData){
-            var dataToSave =OneDayData.builder()
+        newData.forEach(System.out::println);
+
+        for(NewDataDTO data : newData){
+            Optional<Customer> customer = oneDayDataRepository.getCustomer(data.getCustomerId());
+
+            if (customer.isEmpty()) {
+                var customerToSave = Customer.builder()
+                        .id(data.getCustomerId())
+                        .customerName(data.getCustomerName())
+                        .startDate(LocalDate.parse(data.getStartDate()))
+                        .customerType(data.getCustomerType())
+                        .customerBusinessType(data.getCustomerBusinessType())
+                        .build();
+
+                customer = Optional.of(customerToSave);
+                oneDayDataRepository.saveCustomer(customerToSave);
+            }
+
+            var dataToSave = OneDayData.builder()
                     .date(LocalDate.parse(data.getDate()))
-                    .customerId(data.getCustomerId())
-                    .customerName((data.getCustomerName()))
-                    .startDate(LocalDate.parse(data.getStartDate()))
-                    .customerType(data.getCustomerType())
+                    .customer(customer.get())
                     .customerIncome(new BigDecimal(data.getCustomerIncome()))
                     .customerRiskClass(data.getCustomerRiskClass())
-                    .customerBusinessType(data.getCustomerBusinessType())
                     .R1(calculateR1(data))
                     .R2(calculateR2(data))
                     .build();
 
-            oneDayDataRepository.save(dataToSave);
+            oneDayDataRepository.saveOneDayData(dataToSave);
         }
 
     }
 
-    private double calculateR1(NewDataDAO newData){
+    private double calculateR1(NewDataDTO newData){
         // R1 = (CUSTOMER_INCOME/10) * F1
         double R1 = Double.parseDouble(newData.getCustomerIncome()) / 10;
 
@@ -101,7 +120,7 @@ public class FetchingDataService {
         return R1;
     }
 
-    private double calculateR2(NewDataDAO newData){
+    private double calculateR2(NewDataDTO newData){
         // R1 = (CUSTOMER_INCOME/10) * F1
         double R2 = Double.parseDouble(newData.getCustomerIncome()) / 100;
 
@@ -120,7 +139,7 @@ public class FetchingDataService {
         return R2;
     }
 
-    private void potentialEmailSend(NewDataDAO newData) {
+    private void potentialEmailSend(NewDataDTO newData) {
         List<OneDayData> latestData = getCustomerData(newData.getCustomerId(), 1);
 
         if(!latestData.isEmpty()) {

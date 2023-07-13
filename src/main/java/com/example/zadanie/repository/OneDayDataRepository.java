@@ -1,26 +1,63 @@
 package com.example.zadanie.repository;
 
+import com.example.zadanie.dto.ResponseData;
+import com.example.zadanie.models.Customer;
 import com.example.zadanie.models.OneDayData;
+import jakarta.persistence.NoResultException;
 import lombok.AllArgsConstructor;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @AllArgsConstructor
 public class OneDayDataRepository {
     private final SessionFactory sessionFactory;
 
-    public void save(OneDayData data){
+    public void saveOneDayData(OneDayData data){
         try (Session session = sessionFactory.openSession()) {
             session.beginTransaction();
 
             session.persist(data);
 
             session.getTransaction().commit();
+        }
+    }
+
+    public void saveCustomer(Customer customer){
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+
+            session.persist(customer);
+
+            session.getTransaction().commit();
+        }
+    }
+
+    public Optional<Customer> getCustomer(String customerId){
+        try (Session session = sessionFactory.openSession()) {
+
+
+            session.beginTransaction();
+
+            String hql = "SELECT d " +
+                    "FROM Customer d " +
+                    "WHERE d.id like :customerId ";
+
+            Query<Customer> query = session.createQuery(hql, Customer.class);
+            query.setParameter("customerId", customerId);
+
+            Customer customer = query.uniqueResult();
+            session.getTransaction().commit();
+
+            return Optional.ofNullable(customer);
+        } catch (NoResultException e){
+            return Optional.empty();
         }
     }
 
@@ -32,7 +69,7 @@ public class OneDayDataRepository {
 
             String hql = "SELECT d " +
                     "FROM OneDayData d " +
-                    "WHERE d.customerId like :customerId " +
+                    "WHERE d.customer.id like :customerId " +
                     "ORDER BY d.date desc";
 
             Query<OneDayData> query = session.createQuery(hql, OneDayData.class);
@@ -45,5 +82,44 @@ public class OneDayDataRepository {
         }
 
         return results;
+    }
+
+    public Optional<ResponseData> getNewestDataByCustomer(String customerId, Optional<LocalDate> date){
+
+        String hql;
+        Object[] result;
+
+        if(date.isPresent()){
+            hql = "SELECT d, c " +
+                    "FROM OneDayData d " +
+                    "JOIN d.customer c " +
+                    "WHERE c.id = :customerId " +
+                    "and d.date = :date " +
+                    "ORDER BY d.date DESC";
+        }
+        else {
+            hql = "SELECT d, c " +
+                    "FROM OneDayData d " +
+                    "JOIN d.customer c " +
+                    "WHERE c.id = :customerId " +
+                    "ORDER BY d.date DESC";
+        }
+
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+
+            Query<Object[]> query = session.createQuery(hql);
+            query.setParameter("customerId", customerId);
+            date.ifPresent(localDate -> query.setParameter("date", localDate));
+            query.setMaxResults(1);
+
+            result = query.getSingleResult();
+
+            session.getTransaction().commit();
+
+            return Optional.of(new ResponseData((Customer) result[1], (OneDayData) result[0]));
+        } catch (NoResultException e){
+            return Optional.empty();
+        }
     }
 }

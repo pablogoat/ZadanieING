@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Date;
 
 @Data
@@ -15,15 +15,12 @@ import java.util.Date;
 @AllArgsConstructor
 @Entity
 @Table(name = "client")
-public class Client {
+public class Customer {
     @Id
     private String id;
     private String customerName;
-    private Date startDate;
+    private LocalDate startDate;
     private String customerType;
-    private BigDecimal customerIncome;
-    private String customerRiskClass;
     private String customerBusinessType;
-    private float R1;
-    private float R2;
+
 }
