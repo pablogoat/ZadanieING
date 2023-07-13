@@ -1,7 +1,9 @@
 package com.example.zadanie.repository;
 
 import com.example.zadanie.dto.ResponseData;
+import com.example.zadanie.dto.ResponseNoteDTO;
 import com.example.zadanie.models.Customer;
+import com.example.zadanie.models.Note;
 import com.example.zadanie.models.OneDayData;
 import jakarta.persistence.NoResultException;
 import lombok.AllArgsConstructor;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
 @AllArgsConstructor
@@ -34,6 +37,16 @@ public class OneDayDataRepository {
             session.beginTransaction();
 
             session.persist(customer);
+
+            session.getTransaction().commit();
+        }
+    }
+
+    public void saveNote(Note note) {
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+
+            session.persist(note);
 
             session.getTransaction().commit();
         }
@@ -121,5 +134,32 @@ public class OneDayDataRepository {
         } catch (NoResultException e){
             return Optional.empty();
         }
+    }
+
+    public List<ResponseNoteDTO> getNotes(String customerId, LocalDate since, LocalDate until) {
+        List<ResponseNoteDTO> results;
+
+        try (Session session = sessionFactory.openSession()) {
+            session.beginTransaction();
+
+            String hql = "SELECT n " +
+                    "FROM Note n " +
+                    "WHERE n.customer.id like :customerId " +
+                    "and (n.date between :since and :until) " +
+                    "ORDER BY n.date desc";
+
+            Query<Note> query = session.createQuery(hql, Note.class);
+            query.setParameter("customerId", customerId);
+            query.setParameter("since", since);
+            query.setParameter("until", until);
+
+            results = query.getResultList().stream()
+                    .map(ResponseNoteDTO::new)
+                    .collect(Collectors.toList());
+
+            session.getTransaction().commit();
+        }
+
+        return results;
     }
 }

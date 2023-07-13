@@ -49,8 +49,6 @@ public class FetchingDataService {
                 .build()
                 .parse();
 
-        newData.forEach(System.out::println);
-
         for(NewDataDTO data : newData){
             Optional<Customer> customer = oneDayDataRepository.getCustomer(data.getCustomerId());
 

@@ -1,10 +1,14 @@
 package com.example.zadanie.api;
 
+import com.example.zadanie.dto.NoteDTO;
 import com.example.zadanie.dto.ResponseData;
+import com.example.zadanie.dto.ResponseNoteDTO;
 import com.example.zadanie.models.OneDayData;
 import com.example.zadanie.service.FetchingDataService;
+import com.example.zadanie.service.NotesService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -18,6 +22,7 @@ import java.util.Optional;
 public class TestController {
 
     private final FetchingDataService fetchingDataService;
+    private final NotesService notesService;
 
     @GetMapping
     public ResponseEntity<String> fetch() {
@@ -38,5 +43,25 @@ public class TestController {
             @RequestParam Optional<LocalDate> date
             ) {
         return ResponseEntity.ok(fetchingDataService.getNewestDataByCustomer(customerId, date));
+    }
+
+    @PostMapping(path = "/customer/{customer}/note")
+    public ResponseEntity<String> addNote(
+            @PathVariable("customer") String customerId,
+            @NonNull @RequestBody NoteDTO note){
+        return ResponseEntity.ok(notesService.addNote(customerId, note));
+    }
+
+    @GetMapping(path = "/customer/{customer}/note")
+    public ResponseEntity<List<ResponseNoteDTO>> getNotes(
+            @PathVariable("customer") String customerId,
+            @RequestParam Optional<LocalDate> since,
+            @RequestParam Optional<LocalDate> until
+    ){
+        if(since.isEmpty() || until.isEmpty()){
+            return ResponseEntity.ok(List.of());
+        }
+
+        return ResponseEntity.ok(notesService.getNotes(customerId, since.get(), until.get()));
     }
 }
